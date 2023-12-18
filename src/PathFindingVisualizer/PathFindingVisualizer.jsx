@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Node from "./Node/Node";
 
 //Pathfinding
@@ -17,11 +17,7 @@ import { laydownrod } from "../MazeAlgorithms/laydownrod";
 import { extendwall } from "../MazeAlgorithms/extendwall";
 
 import "./PathFindingVisualizer.css";
-
-let START_NODE_ROW = 1;
-let START_NODE_COL = 1;
-let FINISH_NODE_ROW = 45;
-let FINISH_NODE_COL = 75;
+import { useGridGenerator, getInitialGrid } from "../hooks/useGridGenerator";
 
 const mazeItems = [
   "Random",
@@ -35,15 +31,14 @@ const pathItems = [
   "A* Algorithm",
 ];
 
-const ROW_RANGE = 47;
-const COL_RANGE = 77;
-
-const initialNum = getInitialNum(window.innerWidth, window.innerHeight);
-const initialNumRows = initialNum[0];
-const initialNumColumns = initialNum[1];
-
 export const PathfindingVisualizer = () => {
-  const [grid, setGrid] = useState(getInitialGrid());
+  const [startNode, setStartNode] = useState({ Row: 1, Col: 1 });
+  const [endNode, setEndNode] = useState({ Row: 1, Col: 1 });
+
+  const [numRows, numColumns, Initgrid, initGrid1, initGrid2] =
+    useGridGenerator();
+
+  const [grid, setGrid] = useState([]);
   const [mouseIsPressed, setMouseIsPressed] = useState(false);
   const [visualizingAlgorithm, setVisualizingAlgorithm] = useState(false);
   const [generatingMaze, setGeneratingMaze] = useState(false);
@@ -53,15 +48,21 @@ export const PathfindingVisualizer = () => {
   const [pathAlgo, setPathAlgo] = useState(pathItems[0]);
   const handleChangePath = (e) => setPathAlgo(e.target.value);
 
+  useEffect(() => {
+    setGrid(Initgrid);
+    setStartNode({ Row: 1, Col: 1 });
+    setEndNode({ Row: numRows - 2, Col: numColumns - 2 });
+  }, [numRows, numColumns]);
+
+  useEffect(() => {
+    setGrid(getInitialGrid(numRows, numColumns, startNode, endNode));
+  }, [startNode, endNode]);
+
   // const [chosenSort1, setSelectSort1] = useState("Bubble Sort");
   // const handleChange1 = (e) => setSelectSort1(e.target.value);
   // const [chosenSort2, setSelectSort2] = useState("Bubble Sort");
   // const handleChange2 = (e) => setSelectSort2(e.target.value);
 
-  // const width = window.innerWidth;
-  // const height = window.innerHeight;
-  const numRows = initialNumRows;
-  const numColumns = initialNumColumns;
   const speed = 10;
   const mazeSpeed = 10;
 
@@ -84,31 +85,25 @@ export const PathfindingVisualizer = () => {
 
   //Clear
   const clearGrid = () => {
-    if (visualizingAlgorithm || generatingMaze) {
-      return;
-    }
     for (let row = 0; row < grid.length; row++) {
       for (let col = 0; col < grid[0].length; col++) {
         if (
           !(
-            (row === START_NODE_ROW && col === START_NODE_COL) ||
-            (row === FINISH_NODE_ROW && col === FINISH_NODE_COL)
+            (row === startNode.Row && col === startNode.Col) ||
+            (row === endNode.Row && col === endNode.Col)
           )
         ) {
           document.getElementById(`node-${row}-${col}`).className = "node";
         }
       }
     }
-    const newGrid = getInitialGrid(numRows, numColumns);
-    setGrid(newGrid);
+    setGrid(getInitialGrid(numRows, numColumns, startNode, endNode));
     setVisualizingAlgorithm(false);
     setGeneratingMaze(false);
   };
 
   const clearPath = () => {
-    if (visualizingAlgorithm || generatingMaze) {
-      return;
-    }
+    if (generatingMaze) return;
     for (let row = 0; row < grid.length; row++) {
       for (let col = 0; col < grid[0].length; col++) {
         if (
@@ -128,18 +123,19 @@ export const PathfindingVisualizer = () => {
   };
 
   const resetPosition = () => {
-    clearGrid();
     if (visualizingAlgorithm || generatingMaze) return;
-    START_NODE_ROW = Math.floor(Math.random() * (ROW_RANGE - 2)) + 1;
-    START_NODE_COL = Math.floor(Math.random() * (COL_RANGE - 2)) + 1;
-    FINISH_NODE_ROW = Math.floor(Math.random() * (ROW_RANGE - 2)) + 1;
-    FINISH_NODE_COL = Math.floor(Math.random() * (COL_RANGE - 2)) + 1;
-    if (
-      START_NODE_ROW === FINISH_NODE_ROW &&
-      START_NODE_COL === FINISH_NODE_COL
-    )
+    const nextStartRow = Math.floor(Math.random() * (numRows - 2)) + 1;
+    const nextStartCol = Math.floor(Math.random() * (numColumns - 2)) + 1;
+    const nextEndRow = Math.floor(Math.random() * (numRows - 2)) + 1;
+    const nextEndCol = Math.floor(Math.random() * (numColumns - 2)) + 1;
+    if (nextStartRow === nextEndRow && nextStartCol === nextEndCol)
       resetPosition();
-    else getInitialGrid();
+    else {
+      setStartNode({ Row: nextStartRow, Col: nextStartCol });
+      setEndNode({ Row: nextEndRow, Col: nextEndCol });
+      setVisualizingAlgorithm(false);
+      setGeneratingMaze(false);
+    }
   };
 
   //Pathfinding
@@ -150,8 +146,8 @@ export const PathfindingVisualizer = () => {
         const node = nodesInShortestPathOrder[i];
         if (
           !(
-            (node.row === START_NODE_ROW && node.col === START_NODE_COL) ||
-            (node.row === FINISH_NODE_ROW && node.col === FINISH_NODE_COL)
+            (node.row === startNode.Row && node.col === startNode.Col) ||
+            (node.row === endNode.Row && node.col === endNode.Col)
           )
         )
           document.getElementById(`node-${node.row}-${node.col}`).className =
@@ -173,8 +169,8 @@ export const PathfindingVisualizer = () => {
         const node = visitedNodesInOrder[i];
         if (
           !(
-            (node.row === START_NODE_ROW && node.col === START_NODE_COL) ||
-            (node.row === FINISH_NODE_ROW && node.col === FINISH_NODE_COL)
+            (node.row === startNode.Row && node.col === startNode.Col) ||
+            (node.row === endNode.Row && node.col === endNode.Col)
           )
         )
           document.getElementById(`node-${node.row}-${node.col}`).className =
@@ -184,21 +180,23 @@ export const PathfindingVisualizer = () => {
   };
 
   const visualizePathfinding = () => {
-    const startNode = grid[START_NODE_ROW][START_NODE_COL];
-    const finishNode = grid[FINISH_NODE_ROW][FINISH_NODE_COL];
+    setVisualizingAlgorithm(true);
+    const startNodeCell = grid[startNode.Row][startNode.Col];
+    const finishNodeCell = grid[endNode.Row][endNode.Col];
     let visitedNodesInOrder, nodesInShortestPathOrder;
     if (pathAlgo === "Dijkstra's Algorithm") {
-      visitedNodesInOrder = dijkstra(grid, startNode, finishNode);
+      visitedNodesInOrder = dijkstra(grid, startNodeCell, finishNodeCell);
       nodesInShortestPathOrder =
-        getNodesInShortestPathOrderDijkstra(finishNode);
+        getNodesInShortestPathOrderDijkstra(finishNodeCell);
     }
     if (pathAlgo === "Depth First Search") {
-      visitedNodesInOrder = dfs(grid, startNode, finishNode);
-      nodesInShortestPathOrder = getNodesInShortestPathOrderdfs(finishNode);
+      visitedNodesInOrder = dfs(grid, startNodeCell, finishNodeCell);
+      nodesInShortestPathOrder = getNodesInShortestPathOrderdfs(finishNodeCell);
     }
     if (pathAlgo === "A* Algorithm") {
-      visitedNodesInOrder = astar(grid, startNode, finishNode);
-      nodesInShortestPathOrder = getNodesInShortestPathOrderAstar(finishNode);
+      visitedNodesInOrder = astar(grid, startNodeCell, finishNodeCell);
+      nodesInShortestPathOrder =
+        getNodesInShortestPathOrderAstar(finishNodeCell);
     }
     animateAlgorithm(visitedNodesInOrder, nodesInShortestPathOrder);
   };
@@ -221,14 +219,15 @@ export const PathfindingVisualizer = () => {
       setTimeout(() => {
         if (
           !(
-            (node.row === START_NODE_ROW && node.col === START_NODE_COL) ||
-            (node.row === FINISH_NODE_ROW && node.col === FINISH_NODE_COL)
+            (node.row === startNode.Row && node.col === startNode.Col) ||
+            (node.row === endNode.Row && node.col === endNode.Col)
           )
         )
           document.getElementById(`node-${node.row}-${node.col}`).className =
             "node node-wall-animated";
       }, i * mazeSpeed);
     }
+    setGeneratingMaze(false);
   };
 
   const generateMaze = () => {
@@ -236,23 +235,56 @@ export const PathfindingVisualizer = () => {
     clearGrid();
     setGeneratingMaze(true);
     setTimeout(() => {
-      const startNode = grid[START_NODE_ROW][START_NODE_COL];
-      const finishNode = grid[FINISH_NODE_ROW][FINISH_NODE_COL];
+      const startNodeCell = grid[startNode.Row][startNode.Col];
+      const finishNodeCell = grid[endNode.Row][endNode.Col];
       let walls;
       if (mazeAlgo === "Random")
-        walls = randomMaze(grid, startNode, finishNode);
+        walls = randomMaze(grid, startNodeCell, finishNodeCell);
       if (mazeAlgo === "Recursive Division")
-        walls = recursiveDivisionMaze(grid, startNode, finishNode);
+        walls = recursiveDivisionMaze(grid, startNodeCell, finishNodeCell);
       if (mazeAlgo === "Lay Down Rod")
-        walls = laydownrod(grid, startNode, finishNode);
+        walls = laydownrod(grid, startNodeCell, finishNodeCell);
       if (mazeAlgo === "Extend Wall")
-        walls = extendwall(grid, startNode, finishNode);
+        walls = extendwall(grid, startNodeCell, finishNodeCell);
       animateMaze(walls);
     }, mazeSpeed);
   };
 
   return (
     <>
+      <select className="button" value={mazeAlgo} onChange={handleChangeMaze}>
+        {mazeItems.map((item) => (
+          <option key={item} value={item}>
+            {item}
+          </option>
+        ))}
+      </select>
+      <button
+        className="button"
+        onClick={generateMaze}
+        disabled={generatingMaze || visualizingAlgorithm}
+      >
+        Create Maze
+      </button>
+
+      <select className="button" value={pathAlgo} onChange={handleChangePath}>
+        {pathItems.map((item) => (
+          <option key={item} value={item}>
+            {item}
+          </option>
+        ))}
+      </select>
+      <button
+        className="button"
+        onClick={visualizePathfinding}
+        disabled={generatingMaze || visualizingAlgorithm}
+      >
+        Start Pathfinding!
+      </button>
+
+      <button onClick={() => clearGrid()}>Clear Grid</button>
+      <button onClick={() => clearPath()}>Clear Path</button>
+      <button onClick={() => resetPosition()}>Reset Position</button>
       <div className="grid">
         {grid.map((row, rowIdx) => {
           return (
@@ -277,106 +309,9 @@ export const PathfindingVisualizer = () => {
             </div>
           );
         })}
-
-        <select className="button" value={mazeAlgo} onChange={handleChangeMaze}>
-          {mazeItems.map((item) => (
-            <option key={item} value={item}>
-              {item}
-            </option>
-          ))}
-        </select>
-        <button
-          className="button"
-          onClick={generateMaze}
-          disabled={generatingMaze || visualizingAlgorithm}
-        >
-          Create Maze
-        </button>
-
-        <select className="button" value={pathAlgo} onChange={handleChangePath}>
-          {pathItems.map((item) => (
-            <option key={item} value={item}>
-              {item}
-            </option>
-          ))}
-        </select>
-        <button
-          className="button"
-          onClick={visualizePathfinding}
-          disabled={generatingMaze || visualizingAlgorithm}
-        >
-          Start Pathfinding!
-        </button>
-
-        <button
-          onClick={() => clearGrid()}
-          disabled={generatingMaze || visualizingAlgorithm}
-        >
-          Clear Grid
-        </button>
-        <button
-          onClick={() => clearPath()}
-          disabled={generatingMaze || visualizingAlgorithm}
-        >
-          Clear Path
-        </button>
-        <button
-          onClick={() => resetPosition()}
-          disabled={generatingMaze || visualizingAlgorithm}
-        >
-          Reset Position
-        </button>
       </div>
     </>
   );
-};
-
-//Init
-function getInitialNum(width, height) {
-  let numColumns;
-  if (width > 1500) {
-    numColumns = Math.floor(width / 25);
-  } else if (width > 1250) {
-    numColumns = Math.floor(width / 22.5);
-  } else if (width > 1000) {
-    numColumns = Math.floor(width / 20);
-  } else if (width > 750) {
-    numColumns = Math.floor(width / 17.5);
-  } else if (width > 500) {
-    numColumns = Math.floor(width / 15);
-  } else if (width > 250) {
-    numColumns = Math.floor(width / 12.5);
-  } else if (width > 0) {
-    numColumns = Math.floor(width / 10);
-  }
-  let cellWidth = Math.floor(width / numColumns);
-  let numRows = Math.floor(height / cellWidth);
-  return [numRows, numColumns];
-}
-
-const getInitialGrid = () => {
-  const grid = [];
-  for (let row = 0; row < ROW_RANGE; row++) {
-    const currentRow = [];
-    for (let col = 0; col < COL_RANGE; col++) {
-      currentRow.push(createNode(col, row));
-    }
-    grid.push(currentRow);
-  }
-  return grid;
-};
-
-const createNode = (col, row) => {
-  return {
-    col,
-    row,
-    isStart: row === START_NODE_ROW && col === START_NODE_COL,
-    isFinish: row === FINISH_NODE_ROW && col === FINISH_NODE_COL,
-    distance: Infinity,
-    isVisited: false,
-    isWall: false,
-    previousNode: null,
-  };
 };
 
 const getNewGridWithMaze = (grid, walls) => {
