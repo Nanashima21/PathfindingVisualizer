@@ -1,9 +1,34 @@
 .grid {
-    font-size: 0;
-    pointer-events: unset;
-  
-    position: absolute;
-    left: 50%;
-    margin-right: -50%;
-    transform: translate(-50%, 2%);
+  font-size: 0;
+  pointer-events: unset;
+
+  position: absolute;
+  left: 50%;
+  margin-right: -50%;
+  transform: translate(-50%, 2%);
+}
+
+.grids {
+  display: flex;
+  justify-content: center;
+  margin-top: 2%;
+  gap: 10%;
+}
+
+.grid1 {
+  font-size: 0;
+  pointer-events: unset;
+
+  position: absolute;
+  left: 30%;
+  transform: translate(-50%, 2%);
+}
+
+.grid2 {
+  font-size: 0;
+  pointer-events: unset;
+
+  position: absolute;
+  margin-left: 70%;
+  transform: translate(-50%, 2%);
 }

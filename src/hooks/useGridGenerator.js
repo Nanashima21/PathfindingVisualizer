@@ -11,17 +11,20 @@ export const useGridGenerator = () => {
       );
       const startNode = { Row: 1, Col: 1 };
       const endNode = { Row: numRows - 2, Col: numColumns - 2 };
-      const endNode12 = { Row: numRows / 2 - 2, Col: numColumns / 2 - 2 };
+      const endNode12 = {
+        Row: numRows - 2,
+        Col: Math.floor(numColumns / 3) - 1,
+      };
       const grid = getInitialGrid(numRows, numColumns, startNode, endNode);
       const grid1 = getInitialGrid(
         numRows,
-        numColumns / 2,
+        Math.floor(numColumns / 3) + 1,
         startNode,
         endNode12
       );
       const grid2 = getInitialGrid(
         numRows,
-        numColumns / 2,
+        Math.floor(numColumns / 3) + 1,
         startNode,
         endNode12
       );
