@@ -1,5 +1,6 @@
 {
-  "name": "my-app",
+  "name": "pathfinding_visualizer",
+  "homepage": "https://Nanashima21.github.io/PathfindingVisualizer/",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
