@@ -6,9 +6,9 @@ You can play from [here](https://nanashima21.github.io/PathfindingVisualizer/).
 
 There are two elements: Single Grid, Compare Pathfinding
 
-Single Sort : Just Pathfinding.
+Single Grid : Just Pathfinding.
 
-Compare Sort : Two types of pathfindings can be performed and compared at the same time.
+Compare Pathfinding : Two types of pathfindings can be performed and compared at the same time.
 
 note : Changing window size during sorting may result in incorrect generating maze and pathfinding.
 
